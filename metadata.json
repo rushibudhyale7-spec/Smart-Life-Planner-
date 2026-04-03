@@ -1,0 +1,8 @@
+{
+  "name": "SmartLife Planner",
+  "description": "A comprehensive lifestyle management app for finance tracking, travel planning, AI recipes, and lifestyle discovery.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

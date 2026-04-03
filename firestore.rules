@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: {userId}
+    // Fields: username, email, phone, dietPreference, travelInterest, financialGoalPreference, role
+    
+    // Collection: expenses
+    // Document ID: {expenseId}
+    // Fields: userId, amount, category, date, notes, createdAt
+    
+    // Collection: goals
+    // Document ID: {goalId}
+    // Fields: userId, name, targetAmount, monthlySaving, savedAmount
+    
+    // Collection: bookmarks
+    // Document ID: {bookmarkId}
+    // Fields: userId, type, title, description, imageUrl, data
+    
+    // Collection: meals
+    // Document ID: {mealId}
+    // Fields: userId, day, breakfast, lunch, dinner
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "rushibudhyale7@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Validation Functions
+    // ===============================================================
+    function isValidUser(data) {
+      return data.username is string && data.username.size() > 0 && data.username.size() < 50 &&
+             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidExpense(data) {
+      return data.amount is number && data.amount >= 0 &&
+             data.category is string && data.category.size() > 0 &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidGoal(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.targetAmount is number && data.targetAmount > 0 &&
+             data.userId == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin()) && 
+                    (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && isValidExpense(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidExpense(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /goals/{goalId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && isValidGoal(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidGoal(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /bookmarks/{bookmarkId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isDocOwner() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /meals/{mealId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isDocOwner() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+  }
+}

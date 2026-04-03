@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and preferences",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "dietPreference": { "type": "string" },
+        "travelInterest": { "type": "string" },
+        "financialGoalPreference": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["username", "email"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "User financial expense",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["userId", "amount", "category", "date"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Financial goal",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "monthlySaving": { "type": "number" },
+        "savedAmount": { "type": "number" }
+      },
+      "required": ["userId", "name", "targetAmount"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "Saved content",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["recipe", "finance", "travel", "lifestyle"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "data": { "type": "object" }
+      },
+      "required": ["userId", "type", "title"]
+    },
+    "Meal": {
+      "title": "Meal",
+      "description": "Weekly meal plan",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "day": { "type": "string" },
+        "breakfast": { "type": "string" },
+        "lunch": { "type": "string" },
+        "dinner": { "type": "string" }
+      },
+      "required": ["userId", "day"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/expenses/{expenseId}": { "schema": "Expense", "description": "Expense records" },
+    "/goals/{goalId}": { "schema": "Goal", "description": "Financial goals" },
+    "/bookmarks/{bookmarkId}": { "schema": "Bookmark", "description": "Saved items" },
+    "/meals/{mealId}": { "schema": "Meal", "description": "Meal plans" }
+  }
+}
